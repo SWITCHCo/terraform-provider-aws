@@ -654,7 +654,18 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update if we need to
-	return resourceAwsInstanceUpdate(d, meta)
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resourceAwsInstanceUpdate(d, meta)
+		if err != nil {
+			if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("[INFO] Instance not found in update, retrying...")
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	return err
 }
 
 func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
