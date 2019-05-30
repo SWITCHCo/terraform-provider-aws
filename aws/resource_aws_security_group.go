@@ -1433,12 +1433,17 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName
 			}
 			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
 
-			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
-				return nil
-			}
-
 			if detachNetworkInterfaceErr != nil {
-				return detachNetworkInterfaceErr
+
+				if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+					return nil
+				}
+
+				// Ignore and proceed if the attachment doesn't already exist. AWS might have just
+				// removed it between listing network interfaces and trying to detach it here.
+				if !isAWSErr(detachNetworkInterfaceErr, "InvalidAttachmentID.NotFound", "") {
+					return detachNetworkInterfaceErr
+				}
 			}
 
 			log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *eni.NetworkInterfaceId)
