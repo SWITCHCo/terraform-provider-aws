@@ -480,7 +480,7 @@ func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout ti
 	if isAWSErr(err, "InvalidAttachmentID.NotFound", "") {
 		return nil
 	}
-	
+
 	// Ignore and proceed if the attachment doesn't already exist. AWS might have just
 	// removed it between listing network interfaces and trying to detach it here.
 	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
