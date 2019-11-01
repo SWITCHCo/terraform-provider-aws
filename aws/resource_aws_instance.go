@@ -985,7 +985,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						Name: aws.String(d.Get("iam_instance_profile").(string)),
 					},
 				}
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 					_, err := conn.AssociateIamInstanceProfile(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1011,7 +1011,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						Name: aws.String(d.Get("iam_instance_profile").(string)),
 					},
 				}
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 					_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
