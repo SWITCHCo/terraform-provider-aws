@@ -740,7 +740,21 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
+	var instance *ec2.Instance
+
+	err := resource.Retry(10*time.Second, func() *resource.RetryError {
+		var err error
+		instance, err = resourceAwsInstanceFindByID(conn, d.Id())
+		if err != nil {
+			if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("[INFO] Instance not found in read, retrying...")
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
